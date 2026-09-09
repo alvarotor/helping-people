@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.helpingpeople.cloud/schemas/v1/ai-service-request-extraction.schema.json",
+  "title": "AI Service Request Extraction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "category_code", "city", "urgency", "confidence"],
+  "properties": {
+    "schema_version": { "const": "v1" },
+    "category_code": { "type": ["string", "null"], "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "city": { "type": ["string", "null"], "maxLength": 160 },
+    "urgency": { "type": ["string", "null"], "enum": ["low", "normal", "high", "emergency", null] },
+    "summary": { "type": ["string", "null"], "maxLength": 1000 },
+    "missing_information": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "maxLength": 200 }
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+  }
+}

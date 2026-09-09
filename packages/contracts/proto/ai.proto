@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package helpingpeople.ai.v1;
+
+option go_package = "github.com/helpingpeoplenow/helping-people/packages/contracts/gen/go/ai/v1;aiv1";
+
+// Backend-to-AI adapter contract. The AI adapter is stateless; the backend
+// owns authorization, persistence, domain state, and publication decisions.
+service AiService {
+  // Generate a user-facing answer and optionally return a structured result.
+  rpc GenerateAssistantReply(GenerateAssistantReplyRequest)
+      returns (GenerateAssistantReplyResponse);
+
+  // Extract structured fields from a service request message.
+  rpc ExtractServiceRequest(ExtractServiceRequestRequest)
+      returns (ExtractServiceRequestResponse);
+
+  // Extract structured fields from a professional onboarding message.
+  rpc ExtractProfessionalProfile(ExtractProfessionalProfileRequest)
+      returns (ExtractProfessionalProfileResponse);
+
+  // Generate one embedding for search or derived indexing.
+  rpc Embed(EmbedRequest) returns (EmbedResponse);
+
+  // Generate embeddings in input order for backfills and bulk indexing.
+  rpc EmbedBatch(EmbedBatchRequest) returns (EmbedBatchResponse);
+}
+
+message ChatMessage {
+  string role = 1;    // system, user, or assistant
+  string content = 2;
+}
+
+message GenerateAssistantReplyRequest {
+  string request_id = 1;
+  string locale = 2;                 // es or en
+  repeated ChatMessage history = 3;
+  string user_message = 4;
+  string system_prompt = 5;
+  string prompt_version = 6;
+  string output_schema_id = 7;       // e.g. ai-assistant-response
+  string output_schema_version = 8;  // e.g. v1
+  string provider_hint = 9;          // empty means adapter policy
+}
+
+message SafetyResult {
+  string status = 1;       // ok, needs_review, or refused
+  string reason_code = 2;
+}
+
+message GenerateAssistantReplyResponse {
+  string message = 1;
+  string structured_output_json = 2;
+  string output_schema_id = 3;
+  string output_schema_version = 4;
+  SafetyResult safety = 5;
+  string provider = 6;
+  string model = 7;
+}
+
+message ExtractServiceRequestRequest {
+  string request_id = 1;
+  string locale = 2;
+  string input_text = 3;
+  string prompt = 4;
+  string prompt_version = 5;
+  string output_schema_id = 6;
+  string output_schema_version = 7;
+}
+
+message ExtractServiceRequestResponse {
+  string structured_output_json = 1;
+  string output_schema_id = 2;
+  string output_schema_version = 3;
+  SafetyResult safety = 4;
+  string provider = 5;
+  string model = 6;
+}
+
+message ExtractProfessionalProfileRequest {
+  string request_id = 1;
+  string locale = 2;
+  string input_text = 3;
+  string prompt = 4;
+  string prompt_version = 5;
+  string output_schema_id = 6;
+  string output_schema_version = 7;
+}
+
+message ExtractProfessionalProfileResponse {
+  string structured_output_json = 1;
+  string output_schema_id = 2;
+  string output_schema_version = 3;
+  SafetyResult safety = 4;
+  string provider = 5;
+  string model = 6;
+}
+
+message EmbedRequest {
+  string request_id = 1;
+  string text = 2;
+  string model = 3;  // empty means adapter default
+}
+
+message EmbedResponse {
+  repeated float values = 1;
+  string model = 2;
+  uint32 dimensions = 3;
+}
+
+message EmbedBatchRequest {
+  string request_id = 1;
+  repeated string texts = 2;
+  string model = 3;
+}
+
+message EmbedBatchResponse {
+  repeated EmbedResponse embeddings = 1;
+}

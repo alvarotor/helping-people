@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.helpingpeople.cloud/schemas/v1/service-request.schema.json",
+  "title": "Service Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "message", "locale", "status", "created_at"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "message": { "type": "string", "minLength": 1, "maxLength": 4000 },
+    "locale": { "type": "string", "enum": ["es", "en"] },
+    "city": { "type": ["string", "null"], "maxLength": 160 },
+    "category_code": { "type": ["string", "null"], "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "status": { "type": "string", "enum": ["draft", "submitted", "matching", "active", "fulfilled", "cancelled", "expired"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

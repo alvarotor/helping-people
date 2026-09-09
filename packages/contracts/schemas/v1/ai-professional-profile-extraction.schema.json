@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.helpingpeople.cloud/schemas/v1/ai-professional-profile-extraction.schema.json",
+  "title": "AI Professional Profile Extraction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "display_name", "bio", "service_categories", "city", "languages", "confidence"],
+  "properties": {
+    "schema_version": { "const": "v1" },
+    "display_name": { "type": ["string", "null"], "maxLength": 160 },
+    "bio": { "type": ["string", "null"], "maxLength": 4000 },
+    "service_categories": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" }
+    },
+    "city": { "type": ["string", "null"], "maxLength": 160 },
+    "languages": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "pattern": "^[a-z]{2,8}$" }
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "needs_confirmation": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "maxLength": 200 }
+    }
+  }
+}

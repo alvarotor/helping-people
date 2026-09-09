@@ -1,0 +1,80 @@
+schema: spec-driven
+
+context: |
+  Project: HelpingPeopleNow, a simple home-services matching platform.
+  Initial market: Spain. Spanish and English are required from the beginning;
+  the domain must be ready for future countries and languages.
+  Product rule: one person may request services, offer professional services,
+  or do both. Professional profiles are optional and require preview plus
+  explicit publish before becoming public. Contact begins on-platform.
+  Repository model: this application repository contains public web, admin web,
+  API, auth, AI adapter, contracts, evaluations, and OpenSpec. Infrastructure
+  lives in the sibling ../helping-people-platform repository.
+  Governance: no agent may silently change a cross-service contract. Cross-
+  repository work uses one OpenSpec change ID and linked pull requests.
+  Agents may propose and implement isolated changes, but may not merge, deploy
+  production, modify production data, commit secrets, or approve their own work.
+  Technical contracts are machine-readable and include OpenAPI, protobuf where
+  justified, JSON schemas for structured AI output, database migrations, and
+  tests/evaluations.
+  AI output is untrusted input. Prompts are versioned and evaluated. Do not use
+  undocumented text markers as data interchange formats.
+  Read the repository AGENTS.md and docs/foundation/WORKSPACE.md before work.
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
+
+rules:
+  proposal:
+    - Include the user problem, desired behavior, non-goals, affected repositories, contract/data impact, security/privacy impact, verification plan, and rollback plan.
+    - Classify the change as application-local, platform-local, contract-preserving, or cross-repository.
+    - Do not propose implementation details that contradict the repository AGENTS.md or approved specifications.
+  design:
+    - Identify service ownership, data ownership, authorization boundaries, compatibility, migration, observability, and failure behavior.
+    - Prefer the smallest complete vertical slice and avoid adding infrastructure without a measured need.
+  tasks:
+    - Each task must identify its repository, files or area, verification command, and whether human approval is required.
+    - Separate application and platform work while preserving the shared change ID.
+  specs:
+    - State externally observable behavior and acceptance criteria precisely enough to test.
+
+operations:
+  apply:
+    guidance:
+      - Do not apply an unapproved change.
+      - Before editing, inspect the relevant repository AGENTS.md and all affected contracts.
+      - Report exact verification commands, results, limitations, and unverified assumptions.
+      - For platform or cross-repository work, inspect the sibling platform repository explicitly.
+  archive:
+    guidance:
+      - Archive only after implementation, tests, evaluations, and human review are complete.
+      - Record application and platform commits separately when a change spans repositories.
+      - Summarize release, rollback, and verification evidence.

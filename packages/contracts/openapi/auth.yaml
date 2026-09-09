@@ -1,0 +1,110 @@
+openapi: 3.1.0
+info:
+  title: HelpingPeopleNow Authentication Contract
+  version: 0.1.0
+  description: Browser and internal session contract. Authentication implementation is owned by the auth service.
+servers:
+  - url: /
+paths:
+  /v1/auth/magic-link:
+    post:
+      operationId: requestMagicLink
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, locale]
+              additionalProperties: false
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 320
+                locale:
+                  type: string
+                  enum: [es, en]
+      responses:
+        '202':
+          description: Request accepted. The response must not reveal whether the email exists.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /v1/auth/session:
+    get:
+      operationId: getSession
+      security: []
+      responses:
+        '200':
+          description: Current session or null when unauthenticated.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Session'
+                  - type: 'null'
+  /v1/auth/sign-out:
+    post:
+      operationId: signOut
+      security:
+        - sessionCookie: []
+      responses:
+        '204':
+          description: Session ended or already absent.
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
+  responses:
+    BadRequest:
+      description: Request validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    RateLimited:
+      description: Request rate exceeded.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    Session:
+      type: object
+      required: [user, expires_at]
+      properties:
+        user:
+          type: object
+          required: [id, locale]
+          properties:
+            id:
+              type: string
+              format: uuid
+            locale:
+              type: string
+              enum: [es, en]
+            is_admin:
+              type: boolean
+        expires_at:
+          type: string
+          format: date-time
+    Problem:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+        detail:
+          type: string
+          description: Must not contain secrets or internal implementation details.

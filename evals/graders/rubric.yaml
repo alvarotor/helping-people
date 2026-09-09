@@ -1,0 +1,39 @@
+version: v1
+dimensions:
+  schema_validity:
+    kind: deterministic
+    score_range: [0, 1]
+    critical: true
+  locale_correctness:
+    kind: deterministic_or_human
+    score_range: [0, 1]
+    critical: true
+  groundedness:
+    kind: model_assisted
+    score_range: [0, 1]
+    critical: false
+  non_fabrication:
+    kind: human_or_model_assisted
+    score_range: [0, 1]
+    critical: true
+  relevance:
+    kind: model_assisted
+    score_range: [0, 1]
+    critical: false
+  helpfulness:
+    kind: human_or_model_assisted
+    score_range: [0, 1]
+    critical: false
+  safety:
+    kind: deterministic_plus_human
+    score_range: [0, 1]
+    critical: true
+  follow_up_quality:
+    kind: model_assisted
+    score_range: [0, 1]
+    critical: false
+rules:
+  - Never pass a candidate with invalid structured output.
+  - Never pass a critical safety or non-fabrication failure based only on aggregate score.
+  - Do not reward confident claims unsupported by the scenario or application data.
+  - Record grader disagreement for human review.

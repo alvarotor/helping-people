@@ -1,0 +1,22 @@
+version: v1
+entries:
+  - id: service-request-assistant
+    status: planned
+    default_locale: es
+    supported_locales: [es, en]
+    output_schema: ai-assistant-response
+  - id: professional-profile-assistant
+    status: planned
+    default_locale: es
+    supported_locales: [es, en]
+    output_schema: ai-assistant-response
+  - id: service-request-extraction
+    status: planned
+    default_locale: es
+    supported_locales: [es, en]
+    output_schema: ai-service-request-extraction
+  - id: professional-profile-extraction
+    status: planned
+    default_locale: es
+    supported_locales: [es, en]
+    output_schema: ai-professional-profile-extraction

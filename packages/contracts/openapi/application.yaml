@@ -1,0 +1,661 @@
+openapi: 3.1.0
+info:
+  title: HelpingPeopleNow Application API
+  version: 0.1.0
+  description: |
+    Initial application contract for the user request, professional discovery,
+    professional profile, and platform conversation journeys.
+servers:
+  - url: /
+    description: Same-origin deployment
+tags:
+  - name: Health
+  - name: Professionals
+  - name: Service Requests
+  - name: Conversations
+  - name: Contact Requests
+paths:
+  /health:
+    get:
+      tags: [Health]
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Service is alive and its required dependencies are available.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          description: Service is alive but not ready for the requested dependency set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /v1/professionals:
+    get:
+      tags: [Professionals]
+      operationId: searchProfessionals
+      security: []
+      summary: Find published professionals for a service need.
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          description: Natural-language description of the help needed.
+        - name: latitude
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+        - name: longitude
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 10
+      responses:
+        '200':
+          description: Ranked published professional results.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalSearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/professionals/{slug}:
+    get:
+      tags: [Professionals]
+      operationId: getPublishedProfessional
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 160
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Published professional profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/professionals/me:
+    get:
+      tags: [Professionals]
+      operationId: getMyProfessionalProfile
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: The caller's professional profile, if created.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ProfessionalProfile'
+                  - type: 'null'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Professionals]
+      operationId: createProfessionalDraft
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfessionalProfileDraftInput'
+      responses:
+        '201':
+          description: Draft professional profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: The caller already has a primary professional profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /v1/professionals/me/publish:
+    post:
+      tags: [Professionals]
+      operationId: publishMyProfessionalProfile
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Profile submitted for publication or published according to review policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Profile cannot be published in its current state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /v1/service-requests:
+    post:
+      tags: [Service Requests]
+      operationId: createServiceRequest
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceRequestInput'
+      responses:
+        '201':
+          description: Created service request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      tags: [Service Requests]
+      operationId: listMyServiceRequests
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Service requests owned by the caller.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/service-requests/{id}:
+    get:
+      tags: [Service Requests]
+      operationId: getServiceRequest
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Owned service request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/contact-requests:
+    post:
+      tags: [Contact Requests]
+      operationId: createContactRequest
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactRequestInput'
+      responses:
+        '201':
+          description: Created contact request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /v1/conversations:
+    get:
+      tags: [Conversations]
+      operationId: listMyConversations
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Conversations in which the caller participates.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConversationSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/conversations/{id}/messages:
+    get:
+      tags: [Conversations]
+      operationId: listConversationMessages
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Messages visible to the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessagePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Conversations]
+      operationId: sendConversationMessage
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageInput'
+      responses:
+        '201':
+          description: Created message.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
+      description: HTTP-only session cookie. The concrete cookie name is deployment configuration.
+  parameters:
+    Locale:
+      name: locale
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [es, en]
+        default: es
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Request validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: Authentication is required or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: The caller is authenticated but not authorized.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Resource not found or not visible to the caller.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    RateLimited:
+      description: Request rate exceeded.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServerError:
+      description: Unexpected server failure.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    Health:
+      type: object
+      required: [status, version]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        version:
+          type: string
+        dependencies:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [ok, degraded, unavailable]
+    Problem:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        code:
+          type: string
+        detail:
+          type: string
+        request_id:
+          type: string
+    Coordinates:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+    ServiceRequestInput:
+      type: object
+      required: [message, locale]
+      additionalProperties: false
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        locale:
+          type: string
+          enum: [es, en]
+        location:
+          $ref: '#/components/schemas/Coordinates'
+        city:
+          type: string
+          maxLength: 160
+    ServiceRequest:
+      allOf:
+        - $ref: '#/components/schemas/ServiceRequestInput'
+        - type: object
+          required: [id, status, created_at]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [draft, submitted, matching, active, fulfilled, cancelled, expired]
+            normalized_category:
+              type: string
+              nullable: true
+            created_at:
+              type: string
+              format: date-time
+    ProfessionalProfileDraftInput:
+      type: object
+      required: [display_name, locale]
+      additionalProperties: false
+      properties:
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        bio:
+          type: string
+          maxLength: 4000
+        locale:
+          type: string
+          enum: [es, en]
+        service_categories:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            pattern: '^[a-z0-9][a-z0-9._-]*$'
+        city:
+          type: string
+          maxLength: 160
+        location:
+          $ref: '#/components/schemas/Coordinates'
+    ProfessionalProfile:
+      type: object
+      required: [id, display_name, state, service_categories, locale]
+      properties:
+        id:
+          type: string
+          format: uuid
+        owner_user_id:
+          type: string
+          format: uuid
+          description: Included only in owner/admin projections, never public projections.
+        slug:
+          type: string
+        display_name:
+          type: string
+        bio:
+          type: string
+        locale:
+          type: string
+          enum: [es, en]
+        service_categories:
+          type: array
+          items:
+            type: string
+        city:
+          type: string
+        state:
+          type: string
+          enum: [draft, pending_review, published, rejected, unpublished, suspended]
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        distance_km:
+          type: number
+          minimum: 0
+          nullable: true
+    ProfessionalSearchResponse:
+      type: object
+      required: [items, query, locale]
+      properties:
+        query:
+          type: string
+        locale:
+          type: string
+          enum: [es, en]
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfessionalProfile'
+        next_cursor:
+          type: string
+          nullable: true
+    ContactRequestInput:
+      type: object
+      required: [professional_profile_id]
+      additionalProperties: false
+      properties:
+        professional_profile_id:
+          type: string
+          format: uuid
+        service_request_id:
+          type: string
+          format: uuid
+        message:
+          type: string
+          maxLength: 2000
+    ContactRequest:
+      allOf:
+        - $ref: '#/components/schemas/ContactRequestInput'
+        - type: object
+          required: [id, requester_user_id, professional_owner_user_id, status, created_at]
+          properties:
+            id:
+              type: string
+              format: uuid
+            requester_user_id:
+              type: string
+              format: uuid
+            professional_owner_user_id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [requested, accepted, declined, cancelled, expired, blocked]
+            created_at:
+              type: string
+              format: date-time
+    ConversationSummary:
+      type: object
+      required: [id, participant_count, state, last_activity_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        participant_count:
+          type: integer
+          minimum: 2
+        state:
+          type: string
+          enum: [pending, active, archived, blocked, closed]
+        last_activity_at:
+          type: string
+          format: date-time
+        unread_count:
+          type: integer
+          minimum: 0
+    MessageInput:
+      type: object
+      required: [body]
+      additionalProperties: false
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 4000
+    Message:
+      allOf:
+        - $ref: '#/components/schemas/MessageInput'
+        - type: object
+          required: [id, conversation_id, sender_user_id, created_at]
+          properties:
+            id:
+              type: string
+              format: uuid
+            conversation_id:
+              type: string
+              format: uuid
+            sender_user_id:
+              type: string
+              format: uuid
+            created_at:
+              type: string
+              format: date-time
+    MessagePage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        next_cursor:
+          type: string
+          nullable: true
