@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local tooling
+.DS_Store
+.pytest_cache/
+coverage.out
