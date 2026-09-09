@@ -1,6 +1,6 @@
 # HelpingPeopleNow Next — Rebuild Roadmap
 
-Status: Phase 8 complete locally; repository remotes pending confirmation
+Status: Phase 9 complete locally; repositories public and pushed
 Date: 2026-09-10
 
 This is the execution checklist for rebuilding HelpingPeopleNow with proposal-driven AI engineering. Do not skip phases because later phases depend on the decisions and artifacts created earlier.
@@ -596,6 +596,23 @@ No production infrastructure is created until the deployment and rollback plans 
 ### Completion criteria
 
 The platform can run the application skeleton locally and can be validated without production access.
+
+### Progress
+
+Completed locally on 2026-09-10:
+
+- created platform Docker Compose with gateway, public web, admin, API, auth, AI, and PostgreSQL services;
+- added environment template and ignore rules for local secrets;
+- added nginx routing for web, admin, API, and auth paths with request ID forwarding;
+- added service healthchecks and Compose dependency conditions;
+- added platform verification script and local startup documentation;
+- built all application images successfully from the platform repository;
+- started the complete stack and verified all seven containers became healthy;
+- verified the gateway health endpoint returned `{"status":"ok"}`;
+- corrected the generated gRPC dependency and AI healthcheck compatibility issues found during the smoke test;
+- committed and pushed both repositories as public repositories under `alvarotor`.
+
+Follow-up work remains for production TLS, immutable image publishing, CI/CD, backups, observability, EC2 deployment, and Kubernetes readiness measurements.
 
 ## Phase 10 — Implement the first vertical slice
 
